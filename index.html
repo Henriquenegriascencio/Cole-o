@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Collector Royale</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;600;700&display=swap">
+  <style>
+    :root {
+      --black: #0a0a0a;
+      --black-2: #111111;
+      --gold: #d4af37;
+      --gold-2: #b78628;
+      --gold-soft: rgba(212, 175, 55, 0.12);
+      --text: #e8e8e8;
+      --muted: #b3b3b3;
+      --success: #52c41a;
+      --danger: #ff4d4f;
+    }
+
+    * { box-sizing: border-box }
+    html, body { margin: 0; height: 100%; background: var(--black); color: var(--text); font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif }
+
+    /* Background glam */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(1200px 600px at 80% -10%, rgba(212,175,55,0.12), transparent 60%),
+        radial-gradient(800px 400px at 0% 100%, rgba(212,175,55,0.10), transparent 60%);
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    header.appbar {
+      position: sticky; top: 0;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 24px; background: rgba(17,17,17,0.9); backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--gold-soft);
+      z-index: 20;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 12px; font-family: Cinzel, serif;
+      letter-spacing: 0.6px;
+    }
+    .brand .logo {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, var(--gold), var(--gold-2));
+      box-shadow: 0 0 18px rgba(212,175,55,0.35), inset 0 0 10px rgba(0,0,0,0.4);
+      border: 1px solid var(--gold);
+    }
+    .brand .name { font-weight: 700; color: var(--gold) }
+
+    nav.topnav { display: flex; gap: 12px }
+    .pill {
+      padding: 10px 14px; border: 1px solid var(--gold-soft); border-radius: 999px;
+      color: var(--text); text-decoration: none; font-weight: 600; font-size: 14px;
+      background: linear-gradient(180deg, rgba(212,175,55,0.08), rgba(212,175,55,0.02));
+      transition: all .2s ease;
+    }
+    .pill:hover { border-color: var(--gold); box-shadow: 0 0 12px rgba(212,175,55,0.24) }
+    .pill.active { color: var(--black); background: var(--gold); border-color: var(--gold) }
+
+    .container { max-width: 1200px; margin: 0 auto; padding: 24px }
+    .grid { display: grid; gap: 18px }
+    .grid.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) }
+    .grid.cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) }
+    .grid.cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)) }
+    @media (max-width: 980px) { .grid.cols-3, .grid.cols-4 { grid-template-columns: repeat(2, 1fr) } }
+    @media (max-width: 640px) { .grid.cols-3, .grid.cols-4, .grid.cols-2 { grid-template-columns: 1fr } }
+
+    .card {
+      background: #0f0f0f; border: 1px solid var(--gold-soft); border-radius: 14px;
+      overflow: hidden; position: relative;
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .card:hover { transform: translateY(-2px); border-color: var(--gold); box-shadow: 0 10px 24px rgba(212,175,55,0.15) }
+
+    .card-header {
+      padding: 16px; border-bottom: 1px solid var(--gold-soft); display: flex; align-items: center; justify-content: space-between;
+      background: linear-gradient(180deg, rgba(212,175,55,0.09), transparent);
+    }
+    .card-title { font-weight: 700; color: var(--gold) }
+    .card-sub { color: var(--muted); font-size: 12px }
+    .card-body { padding: 16px }
+
+    .btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--gold); color: var(--black);
+      border: none; border-radius: 10px; padding: 10px 14px; font-weight: 700; cursor: pointer;
+      transition: filter .2s ease, transform .05s ease;
+    }
+    .btn:hover { filter: brightness(1.05) }
+    .btn:active { transform: scale(0.98) }
+    .btn.ghost {
+      background: transparent; color: var(--gold); border: 1px solid var(--gold);
+    }
+
+    .input, .select, .textarea {
+      width: 100%; background: #0d0d0d; color: var(--text);
+      border: 1px solid var(--gold-soft); border-radius: 10px; padding: 10px 12px;
+      outline: none; transition: border-color .2s ease, box-shadow .2s ease;
+    }
+    .input:focus, .select:focus, .textarea:focus {
+      border-color: var(--gold); box-shadow: 0 0 0 3px rgba(212,175,55,0.18);
+    }
+    .section-title {
+      font-family: Cinzel, serif; color: var(--gold); font-weight: 700; letter-spacing: .5px;
+      display: flex; align-items: center; gap: 10px; margin: 8px 0 16px;
+    }
+    .section-title .bar {
+      flex: 1; height: 1px; background: linear-gradient(90deg, var(--gold), transparent);
+    }
+
+    /* Tabs (Itens, Comunidades, Lista) */
+    .tabs { display: flex; gap: 10px; margin-bottom: 18px }
+    .tab { flex: 1; text-align: center; padding: 12px; border: 1px solid var(--gold-soft); border-radius: 12px; cursor: pointer;
+      background: linear-gradient(180deg, rgba(212,175,55,0.06), rgba(212,175,55,0.02)); font-weight: 700; transition: all .2s ease }
+    .tab:hover { border-color: var(--gold) }
+    .tab.active { background: var(--gold); color: var(--black); border-color: var(--gold) }
+
+    /* Item card */
+    .item {
+      display: grid; grid-template-rows: 160px auto; border-radius: 12px; overflow: hidden;
+    }
+    .item .thumb {
+      background: linear-gradient(135deg, #1a1a1a, #0f0f0f);
+      position: relative;
+    }
+    .item .thumb::after {
+      content: ""; position: absolute; inset: 0; background: radial-gradient(300px 120px at 80% 20%, rgba(212,175,55,0.18), transparent);
+      pointer-events: none;
+    }
+    .item .content { padding: 12px }
+    .badge {
+      display: inline-block; padding: 6px 10px; border: 1px solid var(--gold-soft); border-radius: 999px; font-size: 12px; color: var(--gold);
+      background: rgba(212,175,55,0.08);
+    }
+    .tag { color: var(--muted); font-size: 12px }
+
+    /* Modal */
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none; align-items: center; justify-content: center; z-index: 50 }
+    .modal { width: min(640px, 92vw); background: #0f0f0f; border: 1px solid var(--gold); border-radius: 16px; overflow: hidden }
+    .modal-header { padding: 14px 16px; border-bottom: 1px solid var(--gold-soft); display: flex; align-items: center; justify-content: space-between; background: rgba(212,175,55,0.08) }
+    .modal-body { padding: 16px }
+    .close { background: transparent; border: none; color: var(--gold); font-size: 20px; cursor: pointer }
+
+    /* Auth screen */
+    .auth { min-height: 100vh; display: grid; place-items: center; padding: 24px }
+    .auth-card { width: min(520px, 92vw); background: #0f0f0f; border: 1px solid var(--gold); border-radius: 16px; overflow: hidden }
+    .auth-hero {
+      padding: 28px; text-align: center; border-bottom: 1px solid var(--gold-soft);
+      background: linear-gradient(180deg, rgba(212,175,55,0.12), transparent);
+    }
+    .auth-hero h1 { font-family: Cinzel, serif; color: var(--gold); margin: 0 }
+    .auth-body { padding: 18px }
+    .helper { color: var(--muted); font-size: 13px }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 12px }
+
+    /* Profile */
+    .profile-header { display: flex; align-items: center; gap: 16px }
+    .avatar {
+      width: 72px; height: 72px; border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, var(--gold), var(--gold-2));
+      border: 2px solid var(--gold);
+      box-shadow: 0 0 18px rgba(212,175,55,0.35), inset 0 0 14px rgba(0,0,0,0.6);
+    }
+    .stat { display: flex; align-items: center; gap: 8px; color: var(--muted) }
+    .stat strong { color: var(--gold) }
+
+    /* Footer */
+    footer { margin-top: 24px; padding: 18px; border-top: 1px solid var(--gold-soft); color: var(--muted); text-align: center }
+  </style>
+</head>
+<body>
+
+  <!-- App bar -->
+  <header class="appbar" id="appbar" style="display: none;">
+    <div class="brand">
+      <div class="logo" aria-hidden="true"></div>
+      <div class="name">Collector Royale</div>
+    </div>
+    <nav class="topnav">
+      <a class="pill" href="#" data-route="home">Página principal</a>
+      <a class="pill" href="#" data-route="usuario">Usuário</a>
+      <button class="pill" id="logoutBtn">Sair</button>
+    </nav>
+  </header>
+
+  <!-- Auth -->
+  <main class="auth" id="auth">
+    <div class="auth-card">
+      <div class="auth-hero">
+        <h1>Entre na sua guilda de colecionadores</h1>
+        <p class="helper">Preto e dourado, como sua coleção merece.</p>
+      </div>
+      <div class="auth-body">
+        <div class="grid cols-2">
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Login</div>
+                <div class="card-sub">Acesse sua conta</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <label>Usuário</label>
+              <input class="input" id="loginUser" placeholder="Seu nome de usuário" />
+              <label style="margin-top:8px; display:block;">Senha</label>
+              <input type="password" class="input" id="loginPass" placeholder="••••••••" />
+              <div style="display:flex; gap:10px; margin-top:12px;">
+                <button class="btn" id="loginBtn">Entrar</button>
+                <button class="btn ghost" id="fillDemo">Demo</button>
+              </div>
+              <p class="helper" id="loginMsg" style="margin-top:8px;"></p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div>
+                <div class="card-title">Registrar</div>
+                <div class="card-sub">Crie sua conta</div>
+              </div>
+            </div>
+            <div class="card-body">
+              <label>Usuário</label>
+              <input class="input" id="regUser" placeholder="Escolha um nome" />
+              <div class="split" style="margin-top:8px;">
+                <div>
+                  <label>Email</label>
+                  <input class="input" id="regEmail" placeholder="voce@exemplo.com" />
+                </div>
+                <div>
+                  <label>Senha</label>
+                  <input type="password" class="input" id="regPass" placeholder="••••••••" />
+                </div>
+              </div>
+              <button class="btn" id="regBtn" style="margin-top:12px;">Cadastrar</button>
+              <p class="helper" id="regMsg" style="margin-top:8px;"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Main -->
+  <main class="container" id="main" style="display:none;">
+    <!-- Tabs -->
+    <div class="tabs">
+      <div class="tab active" data-tab="itens">Itens</div>
+      <div class="tab" data-tab="comunidades">Comunidades</div>
+      <div class="tab" data-tab="lista">Lista</div>
+    </div>
+
+    <!-- Itens -->
+    <section id="itens" style="display:block;">
+      <div class="section-title"><span>Itens e categorias</span><div class="bar"></div></div>
+      <div class="grid cols-3">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Categorias dos itens</div>
+              <div class="card-sub">Organize por tipo</div>
+            </div>
+            <button class="btn ghost" id="addCategoryBtn">Nova categoria</button>
+          </div>
+          <div class="card-body" id="categoriesList">
+            <!-- categories render -->
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Cadastrar item</div>
+              <div class="card-sub">Adicione à sua coleção</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <label>Nome do item</label>
+            <input class="input" id="itemName" placeholder="Ex.: Pikachu Holo 1999" />
+            <label style="margin-top:8px; display:block;">Categoria</label>
+            <select class="select" id="itemCategory"></select>
+            <div class="split" style="margin-top:8px;">
+              <div>
+                <label>Raridade</label>
+                <select class="select" id="itemRarity">
+                  <option>Comum</option>
+                  <option>Raro</option>
+                  <option>Épico</option>
+                  <option>Lendário</option>
+                </select>
+              </div>
+              <div>
+                <label>Ano</label>
+                <input class="input" id="itemYear" placeholder="1999" />
+              </div>
+            </div>
+            <label style="margin-top:8px; display:block;">Descrição</label>
+            <textarea class="textarea" id="itemDesc" rows="3" placeholder="Detalhes, condições, edições"></textarea>
+            <div style="display:flex; gap:10px; margin-top:12px;">
+              <button class="btn" id="addItemBtn">Adicionar item</button>
+              <button class="btn ghost" id="clearFormBtn">Limpar</button>
+            </div>
+            <p class="helper" id="itemMsg" style="margin-top:8px;"></p>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Coleção do usuário</div>
+              <div class="card-sub">Seus itens cadastrados</div>
+            </div>
+            <div style="display:flex; gap:8px;">
+              <select class="select" id="filterCategory"></select>
+              <select class="select" id="filterRarity">
+                <option value="">Raridade</option>
+                <option>Comum</option><option>Raro</option><option>Épico</option><option>Lendário</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="grid cols-3" id="userCollection"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Comunidades -->
+    <section id="comunidades" style="display:none;">
+      <div class="section-title"><span>Comunidade</span><div class="bar"></div></div>
+      <div class="grid cols-2">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Feed da comunidade</div>
+              <div class="card-sub">Mostre sua coleção</div>
+            </div>
+          </div>
+          <div class="card-body" id="communityFeed">
+            <!-- posts -->
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Novo post</div>
+              <div class="card-sub">Compartilhe novidades</div>
+            </div>
+          </div>
+          <div class="card-body">
+            <label>Título</label>
+            <input class="input" id="postTitle" placeholder="Conquista do dia" />
+            <label style="margin-top:8px; display:block;">Conteúdo</label>
+            <textarea class="textarea" id="postContent" rows="4" placeholder="O que você quer compartilhar?"></textarea>
+            <button class="btn" id="postBtn" style="margin-top:10px;">Publicar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Lista -->
+    <section id="lista" style="display:none;">
+      <div class="section-title"><span>Lista de desejos e favoritos</span><div class="bar"></div></div>
+      <div class="grid cols-2">
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Lista de desejos</div>
+              <div class="card-sub">O que você quer conseguir</div>
+            </div>
+            <button class="btn ghost" id="clearWishlistBtn">Limpar</button>
+          </div>
+          <div class="card-body">
+            <div class="split">
+              <input class="input" id="wishInput" placeholder="Ex.: Charizard 1st Edition" />
+              <button class="btn" id="addWishBtn">Adicionar</button>
+            </div>
+            <ul id="wishlist" style="margin-top:10px; padding-left:18px;"></ul>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <div>
+              <div class="card-title">Favoritos</div>
+              <div class="card-sub">Itens marcados</div>
+            </div>
+            <button class="btn ghost" id="clearFavBtn">Limpar</button>
+          </div>
+          <div class="card-body">
+            <div class="grid cols-3" id="favoritesGrid"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Usuário -->
+    <section id="usuario" style="display:none;">
+      <div class="section-title"><span>Usuário</span><div class="bar"></div></div>
+      <div class="card">
+        <div class="card-body">
+          <div class="profile-header">
+            <div class="avatar" aria-hidden="true"></div>
+            <div>
+              <div style="font-family:Cinzel; color:var(--gold); font-size:20px; font-weight:700;" id="profileName">Usuário</div>
+              <div class="stat"><strong id="statItems">0</strong> itens • <strong id="statCats">0</strong> categorias • nível <strong id="statLevel">Bronze</strong></div>
+              <p class="helper" id="profileBio">Apaixonado por coleções únicas.</p>
+            </div>
+          </div>
+          <div class="grid cols-3" style="margin-top:14px;">
+            <div>
+              <label>Bio</label>
+              <input class="input" id="bioInput" placeholder="Conte um pouco sobre você" />
+            </div>
+            <div>
+              <label>Redes</label>
+              <input class="input" id="socialInput" placeholder="@usuario" />
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+              <button class="btn" id="saveProfileBtn">Salvar perfil</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>© 2025 Collector Royale — Preto & dourado com estilo.</footer>
+  </main>
+
+  <!-- Modal preview -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <div class="card-title" id="modalTitle">Item</div>
+        <button class="close" id="closeModal">×</button>
+      </div>
+      <div class="modal-body">
+        <p id="modalDesc"></p>
+        <div style="display:flex; gap:8px; margin-top:8px;">
+          <span class="badge" id="modalCat"></span>
+          <span class="badge" id="modalRarity"></span>
+          <span class="badge" id="modalYear"></span>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:14px;">
+          <button class="btn" id="favBtn">Favoritar</button>
+          <button class="btn ghost" id="wishBtn">Adicionar à lista de desejos</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Storage keys
+    const K = {
+      user: 'cr_user',
+      categories: 'cr_categories',
+      items: 'cr_items',
+      favorites: 'cr_favorites',
+      wishlist: 'cr_wishlist',
+      community: 'cr_posts',
+      profile: 'cr_profile'
+    };
+
+    const el = (id) => document.getElementById(id);
+    const qs = (sel, root = document) => root.querySelector(sel);
+    const qsa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+
+    // Seed data
+    const defaultCategories = ['Cartas', 'Brinquedos', 'Moedas', 'Quadrinhos', 'Selos'];
+    const rarities = ['Comum','Raro','Épico','Lendário'];
+
+    // App state
+    let currentUser = null;
+    let modalItem = null;
+
+    // Init
+    document.addEventListener('DOMContentLoaded', () => {
+      initStorage();
+      bindAuth();
+      bindNav();
+      bindTabs();
+      bindItens();
+      bindCommunity();
+      bindLists();
+      bindProfile();
+
+      // Auto-fill demo
+      el('fillDemo').addEventListener('click', () => {
+        el('loginUser').value = 'henrique';
+        el('loginPass').value = '123456';
+      });
+
+      // Try auto-login
+      const savedUser = JSON.parse(localStorage.getItem(K.user) || 'null');
+      if (savedUser?.username) loginSuccess(savedUser.username);
+    });
+
+    function initStorage() {
+      if (!localStorage.getItem(K.categories)) localStorage.setItem(K.categories, JSON.stringify(defaultCategories));
+      if (!localStorage.getItem(K.items)) localStorage.setItem(K.items, JSON.stringify([
+        { name:'Pikachu Holo 1999', category:'Cartas', rarity:'Raro', year:'1999', desc:'Base Set, excelente estado.' },
+        { name:'Action Figure Darth Vader', category:'Brinquedos', rarity:'Épico', year:'2005', desc:'Edição limitada com sabre luminoso.' },
+        { name:'Moeda 1 Cruzeiro', category:'Moedas', rarity:'Comum', year:'1970', desc:'Circulada, bom estado.' }
+      ]));
+      if (!localStorage.getItem(K.favorites)) localStorage.setItem(K.favorites, JSON.stringify([]));
+      if (!localStorage.getItem(K.wishlist)) localStorage.setItem(K.wishlist, JSON.stringify([]));
+      if (!localStorage.getItem(K.community)) localStorage.setItem(K.community, JSON.stringify([
+        { title:'Consegui meu primeiro Lendário!', content:'Depois de anos procurando, consegui a carta lendária do set 2001!', author:'ana' },
+        { title:'Troco moedas por selos', content:'Tenho repetidas de 1965-1972, procuro selos raros.', author:'lucas' }
+      ]));
+      if (!localStorage.getItem(K.profile)) localStorage.setItem(K.profile, JSON.stringify({ bio:'Apaixonado por coleções únicas.', social:'@colecionador' }));
+    }
+
+    /* Auth */
+    function bindAuth() {
+      el('loginBtn').addEventListener('click', () => {
+        const u = el('loginUser').value.trim();
+        const p = el('loginPass').value.trim();
+        if (!u || !p) return msg('loginMsg', 'Informe usuário e senha.', true);
+        loginSuccess(u);
+      });
+      el('regBtn').addEventListener('click', () => {
+        const u = el('regUser').value.trim();
+        const e = el('regEmail').value.trim();
+        const p = el('regPass').value.trim();
+        if (!u || !e || !p) return msg('regMsg', 'Preencha todos os campos.', true);
+        localStorage.setItem(K.user, JSON.stringify({ username: u }));
+        msg('regMsg', 'Conta criada! Faça login.', false);
+      });
+      el('logoutBtn').addEventListener('click', () => {
+        localStorage.removeItem(K.user);
+        currentUser = null;
+        qs('#appbar').style.display = 'none';
+        qs('#main').style.display = 'none';
+        qs('#auth').style.display = 'grid';
+      });
+    }
+    function loginSuccess(username) {
+      currentUser = username;
+      localStorage.setItem(K.user, JSON.stringify({ username }));
+      qs('#auth').style.display = 'none';
+      qs('#appbar').style.display = 'flex';
+      qs('#main').style.display = 'block';
+      el('profileName').textContent = username;
+      renderAll();
+      msg('loginMsg', '');
+    }
+    function msg(id, text, err=false) {
+      const m = el(id); if (!m) return;
+      m.textContent = text || '';
+      m.style.color = err ? 'var(--danger)' : 'var(--gold)';
+    }
+
+    /* Navigation */
+    function bindNav() {
+      qsa('.topnav .pill[data-route]').forEach(a => {
+        a.addEventListener('click', (e) => {
+          e.preventDefault();
+          const route = a.getAttribute('data-route');
+          if (route === 'home') showSection('itens'); // default tab
+          if (route === 'usuario') showUser();
+        });
+      });
+    }
+    function bindTabs() {
+      qsa('.tab').forEach(t => {
+        t.addEventListener('click', () => {
+          qsa('.tab').forEach(x => x.classList.remove('active'));
+          t.classList.add('active');
+          const tab = t.getAttribute('data-tab');
+          ['itens','comunidades','lista','usuario'].forEach(id => el(id).style.display = 'none');
+          el(tab).style.display = 'block';
+        });
+      });
+    }
+    function showSection(id) {
+      qsa('.tab').forEach(x => x.classList.remove('active'));
+      const targetTab = qs('.tab[data-tab="'+id+'"]'); if (targetTab) targetTab.classList.add('active');
+      ['itens','comunidades','lista','usuario'].forEach(x => el(x).style.display = 'none');
+      el(id).style.display = 'block';
+    }
+    function showUser() {
+      qsa('.tab').forEach(x => x.classList.remove('active'));
+      ['itens','comunidades','lista'].forEach(x => el(x).style.display = 'none');
+      el('usuario').style.display = 'block';
+    }
+
+    /* Itens & categorias */
+    function bindItens() {
+      el('addCategoryBtn').addEventListener('click', () => {
+        const name = prompt('Nome da nova categoria:');
+        if (!name) return;
+        const cats = get(K.categories);
+        if (cats.includes(name)) return alert('Categoria já existe.');
+        cats.push(name); set(K.categories, cats);
+        renderCategories(); renderCategorySelects();
+      });
+
+      el('addItemBtn').addEventListener('click', () => {
+        const name = el('itemName').value.trim();
+        const category = el('itemCategory').value;
+        const rarity = el('itemRarity').value;
+        const year = el('itemYear').value.trim();
+        const desc = el('itemDesc').value.trim();
+        if (!name || !category || !rarity) return msg('itemMsg', 'Preencha nome, categoria e raridade.', true);
+        const items = get(K.items);
+        items.push({ name, category, rarity, year, desc });
+        set(K.items, items);
+        msg('itemMsg', 'Item adicionado à coleção!');
+        el('itemName').value = ''; el('itemYear').value = ''; el('itemDesc').value = '';
+        renderCollection();
+        updateStats();
+      });
+      el('clearFormBtn').addEventListener('click', () => {
+        ['itemName','itemYear','itemDesc'].forEach(id => el(id).value = '');
+      });
+
+      el('filterCategory').addEventListener('change', renderCollection);
+      el('filterRarity').addEventListener('change', renderCollection);
+    }
+
+    /* Community */
+    function bindCommunity() {
+      el('postBtn').addEventListener('click', () => {
+        const title = el('postTitle').value.trim();
+        const content = el('postContent').value.trim();
+        if (!title || !content) return alert('Preencha título e conteúdo.');
+        const posts = get(K.community);
+        posts.unshift({ title, content, author: currentUser || 'anon' });
+        set(K.community, posts);
+        el('postTitle').value = ''; el('postContent').value = '';
+        renderCommunity();
+      });
+    }
+
+    /* Lists */
+    function bindLists() {
+      el('addWishBtn').addEventListener('click', () => {
+        const wish = el('wishInput').value.trim();
+        if (!wish) return;
+        const wl = get(K.wishlist); wl.push(wish); set(K.wishlist, wl);
+        el('wishInput').value = ''; renderWishlist();
+      });
+      el('clearWishlistBtn').addEventListener('click', () => { set(K.wishlist, []); renderWishlist(); });
+      el('clearFavBtn').addEventListener('click', () => { set(K.favorites, []); renderFavorites(); });
+    }
+
+    /* Profile */
+    function bindProfile() {
+      const profile = get(K.profile);
+      el('profileBio').textContent = profile.bio || '';
+      el('bioInput').value = profile.bio || '';
+      el('socialInput').value = profile.social || '';
+      el('saveProfileBtn').addEventListener('click', () => {
+        const bio = el('bioInput').value.trim();
+        const social = el('socialInput').value.trim();
+        set(K.profile, { bio, social });
+        el('profileBio').textContent = bio || 'Apaixonado por coleções únicas.';
+        alert('Perfil atualizado!');
+      });
+    }
+
+    /* Render helpers */
+    function renderAll() {
+      renderCategories();
+      renderCategorySelects();
+      renderCollection();
+      renderCommunity();
+      renderWishlist();
+      renderFavorites();
+      updateStats();
+    }
+
+    function renderCategories() {
+      const cats = get(K.categories);
+      const container = el('categoriesList');
+      container.innerHTML = '';
+      const list = document.createElement('div');
+      list.style.display = 'flex'; list.style.flexWrap = 'wrap'; list.style.gap = '8px';
+      cats.forEach(c => {
+        const b = document.createElement('span');
+        b.className = 'badge';
+        b.textContent = c;
+        list.appendChild(b);
+      });
+      container.appendChild(list);
+    }
+
+    function renderCategorySelects() {
+      const cats = get(K.categories);
+      const selItemCat = el('itemCategory');
+      const filterCat = el('filterCategory');
+      selItemCat.innerHTML = cats.map(c => `<option>${c}</option>`).join('');
+      filterCat.innerHTML = `<option value="">Categoria</option>` + cats.map(c => `<option>${c}</option>`).join('');
+    }
+
+    function renderCollection() {
+      const items = get(K.items);
+      const fc = el('filterCategory').value;
+      const fr = el('filterRarity').value;
+      const grid = el('userCollection');
+      grid.innerHTML = '';
+      items
+        .filter(i => (!fc || i.category === fc) && (!fr || i.rarity === fr))
+        .forEach((i, idx) => {
+          const card = document.createElement('div'); card.className = 'card item';
+          const thumb = document.createElement('div'); thumb.className = 'thumb';
+          const body = document.createElement('div'); body.className = 'content';
+          const title = document.createElement('div'); title.style.fontWeight = '700'; title.style.color = 'var(--gold)'; title.textContent = i.name;
+          const meta = document.createElement('div'); meta.innerHTML = `
+            <span class="badge">${i.category}</span>
+            <span class="badge">${i.rarity}</span>
+            <span class="tag">${i.year || '—'}</span>`;
+          const desc = document.createElement('p'); desc.className = 'helper'; desc.textContent = i.desc || '';
+          const actions = document.createElement('div'); actions.style.display = 'flex'; actions.style.gap = '8px'; actions.style.marginTop = '8px';
+          const preview = document.createElement('button'); preview.className = 'btn'; preview.textContent = 'Ver';
+          preview.addEventListener('click', () => openModal(i));
+          const fav = document.createElement('button'); fav.className = 'btn ghost'; fav.textContent = 'Favoritar';
+          fav.addEventListener('click', () => { addFavorite(i); });
+          actions.append(preview, fav);
+          body.append(title, meta, desc, actions);
+          card.append(thumb, body);
+          grid.appendChild(card);
+        });
+    }
+
+    function renderCommunity() {
+      const posts = get(K.community);
+      const feed = el('communityFeed');
+      feed.innerHTML = '';
+      posts.forEach(p => {
+        const card = document.createElement('div'); card.className = 'card';
+        const ch = document.createElement('div'); ch.className = 'card-header';
+        const ct = document.createElement('div'); ct.className = 'card-title'; ct.textContent = p.title;
+        const cs = document.createElement('div'); cs.className = 'card-sub'; cs.textContent = `por ${p.author}`;
+        ch.append(ct, cs);
+        const cb = document.createElement('div'); cb.className = 'card-body';
+        const content = document.createElement('p'); content.textContent = p.content;
+        cb.appendChild(content);
+        card.append(ch, cb);
+        feed.appendChild(card);
+      });
+    }
+
+    function renderWishlist() {
+      const list = el('wishlist');
+      list.innerHTML = '';
+      get(K.wishlist).forEach((w, idx) => {
+        const li = document.createElement('li');
+        li.textContent = w;
+        const rm = document.createElement('button'); rm.className = 'btn ghost'; rm.textContent = 'Remover';
+        rm.style.marginLeft = '8px';
+        rm.addEventListener('click', () => {
+          const wl = get(K.wishlist); wl.splice(idx,1); set(K.wishlist, wl); renderWishlist();
+        });
+        li.appendChild(rm);
+        list.appendChild(li);
+      });
+    }
+
+    function renderFavorites() {
+      const favs = get(K.favorites);
+      const grid = el('favoritesGrid');
+      grid.innerHTML = '';
+      favs.forEach(i => {
+        const card = document.createElement('div'); card.className = 'card item';
+        const thumb = document.createElement('div'); thumb.className = 'thumb';
+        const body = document.createElement('div'); body.className = 'content';
+        const title = document.createElement('div'); title.style.fontWeight = '700'; title.style.color = 'var(--gold)'; title.textContent = i.name;
+        const meta = document.createElement('div'); meta.innerHTML = `
+            <span class="badge">${i.category}</span>
+            <span class="badge">${i.rarity}</span>
+            <span class="tag">${i.year || '—'}</span>`;
+        const desc = document.createElement('p'); desc.className = 'helper'; desc.textContent = i.desc || '';
+        body.append(title, meta, desc);
+        card.append(thumb, body);
+        grid.appendChild(card);
+      });
+    }
+
+    function updateStats() {
+      const items = get(K.items).length;
+      const cats = get(K.categories).length;
+      el('statItems').textContent = items;
+      el('statCats').textContent = cats;
+      el('statLevel').textContent = items >= 50 ? 'Ouro' : items >= 20 ? 'Prata' : 'Bronze';
+    }
+
+    /* Modal */
+    function openModal(item) {
+      modalItem = item;
+      el('modalTitle').textContent = item.name;
+      el('modalDesc').textContent = item.desc || '';
+      el('modalCat').textContent = item.category;
+      el('modalRarity').textContent = item.rarity;
+      el('modalYear').textContent = item.year || '—';
+      qs('#modalBackdrop').style.display = 'flex';
+      el('favBtn').onclick = () => { addFavorite(item); closeModal(); }
+      el('wishBtn').onclick = () => { addWish(item.name); closeModal(); }
+    }
+    function closeModal() { qs('#modalBackdrop').style.display = 'none'; modalItem = null; }
+    el('closeModal').addEventListener('click', closeModal);
+    qs('#modalBackdrop').addEventListener('click', (e) => { if (e.target.id === 'modalBackdrop') closeModal(); });
+
+    /* Data helpers */
+    function get(key) { return JSON.parse(localStorage.getItem(key) || '[]'); }
+    function set(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
+
+    function addFavorite(item) {
+      const favs = get(K.favorites);
+      if (!favs.find(f => f.name === item.name && f.category === item.category)) {
+        favs.push(item); set(K.favorites, favs); renderFavorites();
+      }
+    }
+    function addWish(name) {
+      const wl = get(K.wishlist);
+      wl.push(name); set(K.wishlist, wl); renderWishlist();
+    }
+  </script>
+</body>
+</html>
