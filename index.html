@@ -7,6 +7,73 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;600;700&display=swap">
   <style>
+
+body {
+      background: #000;
+      color: #d4af37;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    .collection-grid {
+      display: grid;
+      gap: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    .item-card {
+      background: #111;
+      border: 1px solid #d4af37;
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform .2s ease;
+    }
+
+    .item-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 6px 16px rgba(212,175,55,0.3);
+    }
+
+    .item-thumb {
+      height: 180px;
+      overflow: hidden;
+      border-bottom: 1px solid #d4af37;
+    }
+
+    .item-thumb img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .item-content {
+      padding: 12px;
+    }
+
+    .item-title {
+      font-weight: bold;
+      color: #d4af37;
+      margin-bottom: 6px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border: 1px solid #d4af37;
+      border-radius: 6px;
+      font-size: 12px;
+      margin-right: 6px;
+    }
+
+    .tag {
+      font-size: 12px;
+      color: #aaa;
+    }
+
+
+
+
     :root {
       --black: #0a0a0a;
       --black-2: #111111;
@@ -79,7 +146,7 @@
     .card:hover { transform: translateY(-2px); border-color: var(--gold); box-shadow: 0 10px 24px rgba(212,175,55,0.15) }
 
     .card-header {
-      padding: 16px; border-bottom: 1px solid var(--gold-soft); display: flex; align-items: center; justify-content: space-between;
+      padding: 16px; border-bottom: 1px solid var(--gold-soft); display: auto; align-items: center; justify-content: space-between;
       background: linear-gradient(180deg, rgba(212,175,55,0.09), transparent);
     }
     .card-title { font-weight: 700; color: var(--gold) }
@@ -126,6 +193,9 @@
       display: grid; grid-template-rows: 160px auto; border-radius: 12px; overflow: hidden;
     }
     .item .thumb {
+      max-height: 70vh;
+      padding-right: 8px;
+      overflow-y: auto;
       background: linear-gradient(135deg, #1a1a1a, #0f0f0f);
       position: relative;
     }
@@ -280,6 +350,7 @@
             </div>
           </div>
           <div class="card-body">
+          
             <label>Nome do item</label>
             <input class="input" id="itemName" placeholder="Ex.: Pikachu Holo 1999" />
             <label style="margin-top:8px; display:block;">Categoria</label>
@@ -789,6 +860,106 @@
       el('statCats').textContent = cats;
       el('statLevel').textContent = items >= 50 ? 'Ouro' : items >= 20 ? 'Prata' : 'Bronze';
     }
+    const thumb = document.createElement('div');
+thumb.className = 'thumb';
+
+    // Exemplo de itens com imagens
+    const items = [
+      {
+        name: 'Pikachu Holo 1999',
+        category: 'Cartas',
+        rarity: 'Raro',
+        year: '1999',
+        desc: 'Base Set, excelente estado.',
+        img: 'pikachu.jfif'
+      },
+      {
+        name: 'Action Figure Darth Vader',
+        category: 'Brinquedos',
+        rarity: 'Épico',
+        year: '2005',
+        desc: 'Edição limitada com sabre luminoso.',
+        img: 'darth vader.avif'
+      },
+      {
+        name: 'Moeda 1 Cruzeiro',
+        category: 'Moedas',
+        rarity: 'Comum',
+        year: '1970',
+        desc: 'Circulada, bom estado.',
+        img: '1 cruzeiro.jfif'
+      }
+    ];
+
+    function renderCollection() {
+      const grid = document.getElementById('userCollection');
+      grid.innerHTML = '';
+
+      items.forEach(i => {
+        const card = document.createElement('div');
+        card.className = 'item-card';
+
+        const thumb = document.createElement('div');
+        thumb.className = 'item-thumb';
+        const img = document.createElement('img');
+        img.src = i.img;
+        img.alt = i.name;
+        thumb.appendChild(img);
+
+        const content = document.createElement('div');
+        content.className = 'item-content';
+        content.innerHTML = `
+          <div class="item-title">${i.name}</div>
+          <div>
+            <span class="badge">${i.category}</span>
+            <span class="badge">${i.rarity}</span>
+            <span class="tag">${i.year}</span>
+          </div>
+          <p>${i.desc}</p>
+        `;
+
+        card.appendChild(thumb);
+        card.appendChild(content);
+        grid.appendChild(card);
+      });
+    }
+
+    renderCollection();
+
+function renderCollection() {
+  const grid = document.getElementById('userCollection');
+  grid.innerHTML = '';
+
+  items.forEach(i => {
+    const card = document.createElement('div');
+    card.className = 'item-card';
+
+    const thumb = document.createElement('div');
+    thumb.className = 'item-thumb';
+    const img = document.createElement('img');
+    img.src = i.img;
+    img.alt = i.name;
+    thumb.appendChild(img);
+
+    const content = document.createElement('div');
+    content.className = 'item-content';
+    content.innerHTML = `
+      <div class="item-title">${i.name}</div>
+      <div><span class="badge">${i.category}</span> 
+           <span class="badge">${i.rarity}</span> 
+           <span class="tag">${i.year}</span></div>
+      <p>${i.desc}</p>
+    `;
+
+    card.appendChild(thumb);
+    card.appendChild(content);
+    grid.appendChild(card);
+  });
+}
+
+renderCollection();
+
+
 
     /* Modal */
     function openModal(item) {
